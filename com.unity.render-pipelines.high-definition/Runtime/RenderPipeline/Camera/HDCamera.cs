@@ -196,6 +196,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public bool dithering => m_AdditionalCameraData != null && m_AdditionalCameraData.dithering;
 
+        public bool stopNaNs => m_AdditionalCameraData != null && m_AdditionalCameraData.stopNaNs;
+
         public HDPhysicalCamera physicalParameters => m_AdditionalCameraData?.physicalParameters;
 
         public bool invertFaceCulling
@@ -265,6 +267,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 if (!m_frameSettings.IsEnabled(FrameSettingsField.Postprocess) || !CoreUtils.ArePostProcessesEnabled(camera))
                     antialiasing = AntialiasingMode.None;
+#if UNITY_EDITOR
                 else if (camera.cameraType == CameraType.SceneView)
                 {
                     var mode = HDRenderPipelinePreferences.sceneViewAntialiasing;
@@ -274,6 +277,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     else
                         antialiasing = mode;
                 }
+#endif
                 else if (m_AdditionalCameraData != null)
                     antialiasing = m_AdditionalCameraData.antialiasing;
                 else

@@ -30,7 +30,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         }
 
         readonly static ExpandedState<Expandable, HDRenderPipelineAsset> k_ExpandedState = new ExpandedState<Expandable, HDRenderPipelineAsset>(Expandable.CameraFrameSettings | Expandable.General, "HDRP");
-                
+
         enum ShadowResolutionValue
         {
             ShadowResolution128 = 128,
@@ -49,6 +49,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             BakedOrCustomReflection,
             RealtimeReflection
         }
+
+        internal static DiffusionProfileSettingsListUI diffusionProfileUI = new DiffusionProfileSettingsListUI();
 
         internal static SelectedFrameSettings selectedFrameSettings = SelectedFrameSettings.Camera;
 
@@ -122,7 +124,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     k_ExpandedState.SetExpandedAreas(Expandable.RealtimeProbeFrameSettings, true);
                     break;
             }
-        }            
+        }
 
         static void Drawer_TitleDefaultFrameSettings(SerializedHDRenderPipelineAsset serialized, Editor owner)
         {
@@ -419,8 +421,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         {
             EditorGUILayout.PropertyField(serialized.renderPipelineSettings.supportDistortion, k_SupportDistortion);
 
-            EditorGUILayout.PropertyField(serialized.diffusionProfileSettings, k_DiffusionProfileSettingsContent);
-
             EditorGUILayout.PropertyField(serialized.renderPipelineSettings.supportSubsurfaceScattering, k_SupportedSSSContent);
             using (new EditorGUI.DisabledScope(!serialized.renderPipelineSettings.supportSubsurfaceScattering.boolValue))
             {
@@ -430,6 +430,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             }
             
             EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.supportFabricConvolution, k_SupportFabricBSDFConvolutionContent);
+
+            diffusionProfileUI.drawElement = DrawDiffusionProfileElement;
+            diffusionProfileUI.OnGUI(serialized.diffusionProfileSettingsList);
+        }
+
+        static void DrawDiffusionProfileElement(SerializedProperty element, Rect rect, int index)
+        {
+            EditorGUI.ObjectField(rect, element, EditorGUIUtility.TrTextContent("Profile " + index));
         }
 
         const string supportedFormaterMultipleValue = "\u2022 {0} --Multiple different values--";
@@ -456,7 +464,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 builder.AppendLine().AppendFormat(supportedFormaterMultipleValue, k_SupportShadowMaskContent.text);
             else if (serialized.renderPipelineSettings.supportShadowMask.boolValue)
                 builder.AppendLine().AppendFormat(supportedFormater, k_SupportShadowMaskContent.text, k_SupportShadowMaskDrawbacks[supportedLitShaderMode]);
-            
+
             AppendSupport(builder, serialized.renderPipelineSettings.supportSSR, k_SupportSSRContent);
             AppendSupport(builder, serialized.renderPipelineSettings.supportSSAO, k_SupportSSAOContent);
             AppendSupport(builder, serialized.renderPipelineSettings.supportSubsurfaceScattering, k_SupportedSSSContent);
@@ -465,17 +473,26 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             if (serialized.renderPipelineSettings.supportLightLayers.hasMultipleDifferentValues)
                 builder.AppendLine().AppendFormat(supportedFormaterMultipleValue, k_SupportLightLayerContent.text);
             else if (serialized.renderPipelineSettings.supportLightLayers.boolValue)
-                builder.AppendLine().AppendFormat(supportedFormater, k_SupportLightLayerContent.text, k_SupportDrawbacks[k_SupportLightLayerContent]);
-            
+                builder.AppendLine().AppendFormat(supportedFormater, k_SupportLightLayerContent.text, k_SupportLightLayerDrawbacks[supportedLitShaderMode]);
+
             if (serialized.renderPipelineSettings.MSAASampleCount.hasMultipleDifferentValues)
                 builder.AppendLine().AppendFormat(supportedFormaterMultipleValue, k_MSAASampleCountContent.text);
             else if (serialized.renderPipelineSettings.supportMSAA)
-                builder.AppendLine().AppendFormat(supportedFormater, "Multisample Anti-aliasing", k_SupportDrawbacks[k_MSAASampleCountContent]);
-            
+            {
+                // NO MSAA in deferred
+                if (serialized.renderPipelineSettings.supportedLitShaderMode.intValue != (int)RenderPipelineSettings.SupportedLitShaderMode.DeferredOnly)
+                    builder.AppendLine().AppendFormat(supportedFormater, "Multisample Anti-aliasing", k_SupportDrawbacks[k_MSAASampleCountContent]);
+            }
+
             if (serialized.renderPipelineSettings.supportDecals.hasMultipleDifferentValues)
                 builder.AppendLine().AppendFormat(supportedFormaterMultipleValue, k_DecalsSubTitle.text);
             else if (serialized.renderPipelineSettings.supportDecals.boolValue)
                 builder.AppendLine().AppendFormat(supportedFormater, k_DecalsSubTitle.text, k_SupportDrawbacks[k_SupportDecalContent]);
+
+            if (serialized.renderPipelineSettings.decalSettings.perChannelMask.hasMultipleDifferentValues)
+                builder.AppendLine().AppendFormat(supportedFormaterMultipleValue, k_DecalsMetalAndAOSubTitle.text);
+            else if (serialized.renderPipelineSettings.supportDecals.boolValue && serialized.renderPipelineSettings.decalSettings.perChannelMask.boolValue)
+                builder.AppendLine().AppendFormat(supportedFormater, k_DecalsMetalAndAOSubTitle.text, k_SupportDrawbacks[k_MetalAndAOContent]);
 
             AppendSupport(builder, serialized.renderPipelineSettings.supportMotionVectors, k_SupportMotionVectorContent);
             AppendSupport(builder, serialized.renderPipelineSettings.supportRuntimeDebugDisplay, k_SupportRuntimeDebugDisplayContent);
