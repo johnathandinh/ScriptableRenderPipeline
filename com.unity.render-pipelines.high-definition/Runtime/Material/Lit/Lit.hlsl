@@ -100,13 +100,6 @@ TEXTURE2D(_ShadowMaskTexture); // Alias for shadow mask, so we don't need to kno
 #define GBUFFER_LIT_ANISOTROPIC      4
 #define GBUFFER_LIT_IRIDESCENCE      5 // TODO
 
-#define CLEAR_COAT_IOR 1.5
-#define CLEAR_COAT_IETA (1.0 / CLEAR_COAT_IOR) // IETA is the inverse eta which is the ratio of IOR of two interface
-#define CLEAR_COAT_F0 0.04 // IORToFresnel0(CLEAR_COAT_IOR)
-#define CLEAR_COAT_ROUGHNESS 0.01
-#define CLEAR_COAT_PERCEPTUAL_SMOOTHNESS RoughnessToPerceptualSmoothness(CLEAR_COAT_ROUGHNESS)
-#define CLEAR_COAT_PERCEPTUAL_ROUGHNESS RoughnessToPerceptualRoughness(CLEAR_COAT_ROUGHNESS)
-
 #define SUPPORTS_RAYTRACED_AREA_SHADOWS (SHADEROPTIONS_RAYTRACING && (SHADERPASS == SHADERPASS_DEFERRED_LIGHTING))
 
 // It is safe to include this file after the G-Buffer macros above.
@@ -329,7 +322,7 @@ SSSData ConvertSurfaceDataToSSSData(SurfaceData surfaceData)
 
     sssData.diffuseColor = surfaceData.baseColor;
     sssData.subsurfaceMask = surfaceData.subsurfaceMask;
-    sssData.diffusionProfile = surfaceData.diffusionProfile;
+    sssData.diffusionProfileIndex = FindDiffusionProfileIndex(surfaceData.diffusionProfileHash);
 
     return sssData;
 }
@@ -338,10 +331,23 @@ NormalData ConvertSurfaceDataToNormalData(SurfaceData surfaceData)
 {
     NormalData normalData;
 
-    // Note: We can't handle clear coat material here, we have only one slot to store smoothness
-    // and the buffer is the GBuffer1.
-    normalData.normalWS = surfaceData.normalWS;
-    normalData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surfaceData.perceptualSmoothness);
+    // Note: When we are in the prepass (depth only or velocity) and we need to export the normal/roughness - Mean we are lit forward. In deferred the normal buffer will not be exported
+    // If the fragment that we are processing has clear cloat, we want to export the clear coat's perceptual roughness and geometric normal
+    // instead of the base layer's roughness and the shader normal to be use by SSR
+    #if SHADERPASS == SHADERPASS_DEPTH_ONLY || SHADERPASS == SHADERPASS_VELOCITY
+    if (HasFlag(surfaceData.materialFeatures, MATERIALFEATUREFLAGS_LIT_CLEAR_COAT))
+    {
+        normalData.normalWS = surfaceData.geomNormalWS;
+        normalData.perceptualRoughness = CLEAR_COAT_PERCEPTUAL_ROUGHNESS;
+    }
+    else
+    #endif
+    {
+        // Note: We can't handle clear coat material here, we have only one slot to store smoothness
+        // and the buffer is the GBuffer1.
+        normalData.normalWS = surfaceData.normalWS;
+        normalData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surfaceData.perceptualSmoothness);
+    }
 
     return normalData;
 }
@@ -433,16 +439,18 @@ BSDFData ConvertSurfaceDataToBSDFData(uint2 positionSS, SurfaceData surfaceData)
     // However in practice we keep parity between deferred and forward, so we should constrain the various features.
     // The UI is in charge of setuping the constrain, not the code. So if users is forward only and want unleash power, it is easy to unleash by some UI change
 
+    bsdfData.diffusionProfileIndex = FindDiffusionProfileIndex(surfaceData.diffusionProfileHash);
+
     if (HasFlag(surfaceData.materialFeatures, MATERIALFEATUREFLAGS_LIT_SUBSURFACE_SCATTERING))
     {
         // Assign profile id and overwrite fresnel0
-        FillMaterialSSS(surfaceData.diffusionProfile, surfaceData.subsurfaceMask, bsdfData);
+        FillMaterialSSS(bsdfData.diffusionProfileIndex, surfaceData.subsurfaceMask, bsdfData);
     }
 
     if (HasFlag(surfaceData.materialFeatures, MATERIALFEATUREFLAGS_LIT_TRANSMISSION))
     {
         // Assign profile id and overwrite fresnel0
-        FillMaterialTransmission(surfaceData.diffusionProfile, surfaceData.thickness, bsdfData);
+        FillMaterialTransmission(bsdfData.diffusionProfileIndex, surfaceData.thickness, bsdfData);
     }
 
     if (HasFlag(surfaceData.materialFeatures, MATERIALFEATUREFLAGS_LIT_ANISOTROPY))
@@ -656,7 +664,7 @@ void EncodeIntoGBuffer( SurfaceData surfaceData
 // from the structured buffer use to generate the indirect draw call. It allow to not go through all branch and the branch is scalar (not VGPR)
 uint DecodeFromGBuffer(uint2 positionSS, uint tileFeatureFlags, out BSDFData bsdfData, out BuiltinData builtinData)
 {
-    // Note: we have ZERO_INITIALIZE the struct, so bsdfData.diffusionProfile == DIFFUSION_PROFILE_NEUTRAL_ID,
+    // Note: we have ZERO_INITIALIZE the struct, so bsdfData.diffusionProfileIndex == DIFFUSION_PROFILE_NEUTRAL_ID,
     // bsdfData.anisotropy == 0, bsdfData.subsurfaceMask == 0, etc...
     ZERO_INITIALIZE(BSDFData, bsdfData);
     // Note: Some properties of builtinData are not used, just init all at 0 to silent the compiler
@@ -789,7 +797,7 @@ uint DecodeFromGBuffer(uint2 positionSS, uint tileFeatureFlags, out BSDFData bsd
         // We must do this so the compiler can optimize away the read from the G-Buffer 0 to the very end (in PostEvaluateBSDF)
         // Note that we don't use sssData.subsurfaceMask here. But it is still assign so we can have the information in the
         // material debug view + If we require it in the future.
-        UnpackFloatInt8bit(inGBuffer2.b, 16, sssData.subsurfaceMask, sssData.diffusionProfile);
+        UnpackFloatInt8bit(inGBuffer2.b, 16, sssData.subsurfaceMask, sssData.diffusionProfileIndex);
 
         // Reminder: when using SSS we exchange specular occlusion and subsurfaceMask/profileID
         bsdfData.specularOcclusion = inGBuffer2.r;
@@ -800,13 +808,13 @@ uint DecodeFromGBuffer(uint2 positionSS, uint tileFeatureFlags, out BSDFData bsd
         // The neutral value of subsurfaceMask is 0 (handled by ZERO_INITIALIZE).
         if (HasFlag(pixelFeatureFlags, MATERIALFEATUREFLAGS_LIT_SUBSURFACE_SCATTERING))
         {
-            FillMaterialSSS(sssData.diffusionProfile, sssData.subsurfaceMask, bsdfData);
+            FillMaterialSSS(sssData.diffusionProfileIndex, sssData.subsurfaceMask, bsdfData);
         }
 
         // The neutral value of thickness and transmittance is 0 (handled by ZERO_INITIALIZE).
         if (HasFlag(pixelFeatureFlags, MATERIALFEATUREFLAGS_LIT_TRANSMISSION))
         {
-            FillMaterialTransmission(sssData.diffusionProfile, inGBuffer2.g, bsdfData);
+            FillMaterialTransmission(sssData.diffusionProfileIndex, inGBuffer2.g, bsdfData);
         }
     }
     else
@@ -1586,8 +1594,6 @@ DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
 
     }
 
-    // TODO_FCC: Move above the shadow bit so that it will skip computation if fully in shadow.
-    // TODO: Ray traced shadows don't support shadow masks yet. 
 #if RASTERIZED_AREA_LIGHT_SHADOWS || SUPPORTS_RAYTRACED_AREA_SHADOWS
     float  shadow = 1.0;
     float  shadowMask = 1.0;
