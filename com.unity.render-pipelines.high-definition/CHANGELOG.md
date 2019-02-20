@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [6.4.0-preview] - 2019-XX-XX
 
+### Changed
+- When rendering reflection (Planar, reflection probe) disable all specular lighting and for metals use fresnel0 as diffuse color for bake lighting
+
+
 ## [6.3.0-preview] - 2019-02-18
 
 ### Added
@@ -14,19 +18,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a "Stop NaNs" option on cameras and in the Scene View preferences.
 - Added metric display option in HDShadowSettings and improve clamping
 
-### Changed
-- Diffusion profiles are now limited to one per asset and can be referenced in materials, shader graphs and vfx graphs. Materials will be upgraded automatically except if they are using a shader graph, in this case it will display an error message.
-
 ### Fixed
 - Fixed decals in forward
 - Fixed issue with stencil not correctly setup for various master node and shader for the depth pass, motion vector pass and GBuffer/Forward pass
 - Fixed SRP batcher and metal
-- During probe rendering: specular lighting is disabled and for metals, fresnel0 is used as diffuse bake lighting
-
-### Fixed
 - Fixed an issue where scissor render state leaking from the editor code caused partially black rendering
 
 ### Changed
+- Diffusion profiles are now limited to one per asset and can be referenced in materials, shader graphs and vfx graphs. Materials will be upgraded automatically except if they are using a shader graph, in this case it will display an error message.
 - When a lit material has a clear coat mask that is not null, we now use the clear coat roughness to compute the screen space reflection.
 
 ## [6.2.0-preview] - 2019-02-15
