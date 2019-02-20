@@ -454,6 +454,11 @@ float2 ClampAndScaleUVForPoint(float2 UV)
     return min(UV, 1.0f) * _ScreenToTargetScale.xy;
 }
 
+bool ShouldUseFresnelAsBakedDiffuse(float3 fresnel0)
+{
+    return _EnableReflection.x && Max3(fresnel0.r, fresnel0.g, fresnel0.b) > 0.5;
+}
+
 // Define Model Matrix Macro
 // Note: In order to be able to define our macro to forbid usage of unity_ObjectToWorld/unity_WorldToObject
 // We need to declare inline function. Using uniform directly mean they are expand with the macro
