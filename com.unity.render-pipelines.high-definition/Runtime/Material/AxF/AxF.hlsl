@@ -767,11 +767,11 @@ void ModifyBakedDiffuseLighting(float3 V, PositionInputs posInput, SurfaceData s
 
     // Note: When baking reflection probes, we approximate the diffuse with the fresnel0
 #ifdef _AXF_BRDF_TYPE_SVBRDF
-    builtinData.bakeDiffuseLighting *= ShouldUseFresnelAsBakedDiffuse(bsdfData.fresnel0)
+    builtinData.bakeDiffuseLighting *= ReplaceDiffuseForReflectionPass(bsdfData.fresnel0)
         ? bsdfData.fresnel0
         : preLightData.diffuseFGD * bsdfData.diffuseColor;
 #else
-    builtinData.bakeDiffuseLighting *= ShouldUseFresnelAsBakedDiffuse(bsdfData.fresnel0)
+    builtinData.bakeDiffuseLighting *= ReplaceDiffuseForReflectionPass(bsdfData.fresnel0)
         ? bsdfData.fresnel0
         : bsdfData.diffuseColor;
 #endif

@@ -715,9 +715,9 @@ void PostEvaluateBSDF(  LightLoopContext lightLoopContext,
     diffuseLighting = modifiedDiffuseColor * lighting.direct.diffuse + builtinData.emissiveColor;
     #ifdef HDRP_ENABLE_ENV_LIGHT
     // Note: When baking reflection probes, we approximate the diffuse with the fresnel0
-    diffuseLighting += ShouldUseFresnelAsBakedDiffuse(bsdfData.fresnel0)
+    diffuseLighting += ReplaceDiffuseForReflectionPass(bsdfData.fresnel0)
         ? bsdfData.fresnel0
-        : builtinData.bakeDiffuseLighting;
+        : builtinData.bakeDiffuseLighting * modifiedDiffuseColor;
     #endif
     specularLighting = lighting.direct.specular + lighting.indirect.specularReflected;
 

@@ -2451,7 +2451,7 @@ void ModifyBakedDiffuseLighting(float3 V, PositionInputs posInput, SurfaceData s
     // pre-integration and energy term.
     // preLightData.diffuseEnergy will be 1,1,1 if no vlayering or no VLAYERED_DIFFUSE_ENERGY_HACKED_TERM
     // Note: When baking reflection probes, we approximate the diffuse with the fresnel0
-    builtinData.bakeDiffuseLighting *= ShouldUseFresnelAsBakedDiffuse(bsdfData.fresnel0)
+    builtinData.bakeDiffuseLighting *= ReplaceDiffuseForReflectionPass(bsdfData.fresnel0)
         ? bsdfData.fresnel0
         : preLightData.diffuseFGD * preLightData.diffuseEnergy * bsdfData.diffuseColor;
 

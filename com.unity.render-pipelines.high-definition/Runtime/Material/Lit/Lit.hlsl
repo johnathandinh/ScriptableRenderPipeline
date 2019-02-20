@@ -1148,7 +1148,7 @@ void ModifyBakedDiffuseLighting(float3 V, PositionInputs posInput, SurfaceData s
 
     // Premultiply (back) bake diffuse lighting information with DisneyDiffuse pre-integration
     // Note: When baking reflection probes, we approximate the diffuse with the fresnel0
-    builtinData.bakeDiffuseLighting *= ShouldUseFresnelAsBakedDiffuse(bsdfData.fresnel0)
+    builtinData.bakeDiffuseLighting *= ReplaceDiffuseForReflectionPass(bsdfData.fresnel0)
         ? bsdfData.fresnel0
         : preLightData.diffuseFGD * bsdfData.diffuseColor;
 }
