@@ -1524,7 +1524,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             envLightData.lightLayers = probe.lightLayersAsUInt;
             envLightData.influenceShapeType = influence.envShape;
             envLightData.weight = probe.weight;
-            envLightData.multiplier = probe.multiplier * m_indirectLightingController.indirectSpecularIntensity;
+            envLightData.multiplier = probe.multiplier * m_indirectLightingController.indirectSpecularIntensity
+                * m_FrameSettings.specularGlobalDimmer;
             envLightData.influenceExtents = influence.extents;
             switch (influence.envShape)
             {

@@ -313,6 +313,7 @@ CBUFFER_START(UnityGlobal)
 
     #define DEFAULT_LIGHT_LAYERS 0xFF
     uint _EnableLightLayers;
+    uint _EnableReflection;
 
     uint _EnableSSRefraction;
 
