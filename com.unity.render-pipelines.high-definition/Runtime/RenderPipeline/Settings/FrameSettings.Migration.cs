@@ -192,6 +192,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             newFrameSettingsFormat.SetEnabled(FrameSettingsField.SSAOAsync, oldFrameSettingsFormat.runSSAOAsync);
             newFrameSettingsFormat.SetEnabled(FrameSettingsField.ContactShadowsAsync, oldFrameSettingsFormat.runContactShadowsAsync);
             newFrameSettingsFormat.SetEnabled(FrameSettingsField.VolumeVoxelizationsAsync, oldFrameSettingsFormat.runVolumeVoxelizationAsync);
+            newFrameSettingsFormat.SetEnabled(FrameSettingsField.SpecularLighting, true);
 
             if (oldFrameSettingsFormat.lightLoopSettings != null)
             {

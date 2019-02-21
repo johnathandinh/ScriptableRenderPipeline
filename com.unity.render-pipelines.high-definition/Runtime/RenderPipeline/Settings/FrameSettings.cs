@@ -80,6 +80,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         LightLayers = 30,
         [FrameSettingsField(1, autoName: ExposureControl, customOrderInGroup: 32)]
         ExposureControl = 32,
+        [FrameSettingsField(1, autoName: SpecularLighting, customOrderInGroup: 33)]
+        SpecularLighting = 33,
 
         //async settings from 40 to 59
         [FrameSettingsField(2, autoName: AsyncCompute)]
@@ -171,6 +173,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 (uint)FrameSettingsField.FPTLForForwardOpaque,
                 (uint)FrameSettingsField.BigTilePrepass,
                 (uint)FrameSettingsField.TransparentsWriteVelocity,
+                (uint)FrameSettingsField.SpecularLighting,
             })
         };
         /// <summary>Default FrameSettings for realtime ReflectionProbe/PlanarReflectionProbe renderer.</summary>
@@ -214,6 +217,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 (uint)FrameSettingsField.ComputeMaterialVariants,
                 (uint)FrameSettingsField.FPTLForForwardOpaque,
                 (uint)FrameSettingsField.BigTilePrepass,
+                (uint)FrameSettingsField.SpecularLighting,
             })
         };
         /// <summary>Default FrameSettings for baked or custom ReflectionProbe/PlanarReflectionProbe renderer.</summary>

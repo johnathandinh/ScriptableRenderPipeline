@@ -798,7 +798,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 // Off screen rendering is disabled for most of the frame by default.
                 cmd.SetGlobalInt(HDShaderIDs._OffScreenRendering, 0);
-                cmd.SetGlobalInt(HDShaderIDs._EnableReflection, hdCamera.camera.cameraType == CameraType.Reflection ? 1 : 0);
+                cmd.SetGlobalInt(HDShaderIDs._EnableReflection, hdCamera.frameSettings.IsEnabled(FrameSettingsField.SpecularLighting) ? 0 : 1);
             }
         }
 
