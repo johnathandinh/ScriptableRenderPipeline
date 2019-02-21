@@ -6,9 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [6.4.0-preview] - 2019-XX-XX
 
-### Changed
-- When rendering reflection (Planar, reflection probe) disable all specular lighting and for metals use fresnel0 as diffuse color for bake lighting
+### Added
+- VR: Added TextureXR system to selectively expand TEXTURE2D macros to texture array for single-pass stereo instancing + Convert textures call to these macros
+- Added an unit selection dropdown next to shutter speed (camera)
+- Added a new FrameSettings: Specular Lighting to toggle the specular during the rendering
 
+### Fixed
+- Fixed Light explorer. The volume explorer used `profile` instead of `sharedProfile` which instantiate a custom volume profile instead of editing the asset itself.
+- Fixed UI issue where all is displayed using metric unit in shadow cascade and Percent is set in the unit field (happening when opening the inspector).
+
+### Changed
+- When rendering reflection probe disable all specular lighting and for metals use fresnelF0 as diffuse color for bake lighting.
 
 ## [6.3.0-preview] - 2019-02-18
 
