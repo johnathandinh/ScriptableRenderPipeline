@@ -1,4 +1,4 @@
-Shader "Hidden/HDRP/TerrainLit_Basemap_Gen"
+Shader "Hidden/HDRP/TerrainLit_BasemapGen"
 {
     Properties
     {
@@ -26,7 +26,7 @@ Shader "Hidden/HDRP/TerrainLit_Basemap_Gen"
 
         #pragma shader_feature _TERRAIN_BLEND_HEIGHT
 
-        #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.ShaderVariables.hlsl"
+        #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap_Includes.hlsl"
 
         CBUFFER_START(UnityTerrain)
             UNITY_TERRAIN_CB_VARS

@@ -76,6 +76,8 @@ Shader "HDRP/TerrainLit"
     #pragma vertex Vert
     #pragma fragment Frag
 
+    #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap_Includes.hlsl"
+
     ENDHLSL
 
     SubShader
@@ -123,9 +125,8 @@ Shader "HDRP/TerrainLit"
             #pragma multi_compile _ LIGHT_LAYERS
 
             #define SHADERPASS SHADERPASS_GBUFFER
-            #include "TerrainLit_Splatmap.ShaderVariables.hlsl"
-            #include "TerrainLitTemplate.hlsl"
-            #include "TerrainLit_Splatmap.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLitTemplate.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.hlsl"
 
             ENDHLSL
         }
@@ -146,9 +147,8 @@ Shader "HDRP/TerrainLit"
             // both direct and indirect lighting) will hand up in the "regular" lightmap->LIGHTMAP_ON.
 
             #define SHADERPASS SHADERPASS_LIGHT_TRANSPORT
-            #include "TerrainLit_Splatmap.ShaderVariables.hlsl"
-            #include "TerrainLitTemplate.hlsl"
-            #include "TerrainLit_Splatmap.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLitTemplate.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.hlsl"
 
             ENDHLSL
         }
@@ -169,9 +169,8 @@ Shader "HDRP/TerrainLit"
             HLSLPROGRAM
 
             #define SHADERPASS SHADERPASS_SHADOWS
-            #include "TerrainLit_Splatmap.ShaderVariables.hlsl"
-            #include "TerrainLitTemplate.hlsl"
-            #include "TerrainLit_Splatmap.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLitTemplate.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.hlsl"
 
             ENDHLSL
         }
@@ -202,8 +201,7 @@ Shader "HDRP/TerrainLit"
             #pragma multi_compile _ WRITE_MSAA_DEPTH
 
             #define SHADERPASS SHADERPASS_DEPTH_ONLY
-            #include "TerrainLit_Splatmap.ShaderVariables.hlsl"
-            #include "TerrainLitTemplate.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLitTemplate.hlsl"
             #ifdef WRITE_NORMAL_BUFFER
                 #if defined(_NORMALMAP)
                     #define OVERRIDE_SPLAT_SAMPLER_NAME sampler_Normal0
@@ -211,7 +209,7 @@ Shader "HDRP/TerrainLit"
                     #define OVERRIDE_SPLAT_SAMPLER_NAME sampler_Mask0
                 #endif
             #endif
-            #include "TerrainLit_Splatmap.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.hlsl"
 
             ENDHLSL
         }
@@ -250,9 +248,8 @@ Shader "HDRP/TerrainLit"
             #pragma multi_compile USE_FPTL_LIGHTLIST USE_CLUSTERED_LIGHTLIST
 
             #define SHADERPASS SHADERPASS_FORWARD
-            #include "TerrainLit_Splatmap.ShaderVariables.hlsl"
-            #include "TerrainLitTemplate.hlsl"
-            #include "TerrainLit_Splatmap.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLitTemplate.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.hlsl"
 
             ENDHLSL
         }
@@ -262,6 +259,6 @@ Shader "HDRP/TerrainLit"
     }
 
     Dependency "BaseMapShader" = "Hidden/HDRP/TerrainLit_Basemap"
-    Dependency "BaseMapGenShader" = "Hidden/HDRP/TerrainLit_Basemap_Gen"
+    Dependency "BaseMapGenShader" = "Hidden/HDRP/TerrainLit_BasemapGen"
     CustomEditor "UnityEditor.Experimental.Rendering.HDPipeline.TerrainLitGUI"
 }
