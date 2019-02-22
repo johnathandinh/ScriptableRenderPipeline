@@ -80,7 +80,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         LightLayers = 30,
         [FrameSettingsField(1, autoName: ExposureControl, customOrderInGroup: 32)]
         ExposureControl = 32,
-        [FrameSettingsField(1, autoName: SpecularLighting, customOrderInGroup: 33)]
         SpecularLighting = 33,
 
         //async settings from 40 to 59
@@ -245,7 +244,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // followings are helper for engine.
         internal bool fptl => litShaderMode == LitShaderMode.Deferred || bitDatas[(int)FrameSettingsField.FPTLForForwardOpaque];
         internal float specularGlobalDimmer => bitDatas[(int)FrameSettingsField.Reflection] ? 1f : 0f;
-        internal bool useEnvLights => specularGlobalDimmer > 0;
+        internal bool useEnvLights => bitDatas[(int)FrameSettingsField.SpecularLighting];
 
         internal bool BuildLightListRunsAsync() => SystemInfo.supportsAsyncCompute && bitDatas[(int)FrameSettingsField.AsyncCompute] && bitDatas[(int)FrameSettingsField.LightListAsync];
         internal bool SSRRunsAsync() => SystemInfo.supportsAsyncCompute && bitDatas[(int)FrameSettingsField.AsyncCompute] && bitDatas[(int)FrameSettingsField.SSRAsync];
