@@ -9,7 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 0cf1dab834d4ec34195b920ea7bbf9ec, type: 3}
   m_Name: AreaLightShadowHDRPAsset
   m_EditorClassIdentifier: 
@@ -17,7 +16,7 @@ MonoBehaviour:
     type: 2}
   m_RenderingPathDefaultCameraFrameSettings:
     bitDatas:
-      data1: 69275665694493
+      data1: 69275665825565
       data2: 4539628424389459968
   m_RenderingPathDefaultBakedOrCustomReflectionFrameSettings:
     bitDatas:
@@ -47,9 +46,6 @@ MonoBehaviour:
     supportRuntimeDebugDisplay: 1
     supportDitheringCrossFade: 1
     supportRayTracing: 0
-    editorRaytracingFilterLayerMask:
-      serializedVersion: 2
-      m_Bits: 4294967295
     lightLoopSettings:
       cookieSize: 128
       cookieTexArraySize: 16
@@ -74,9 +70,9 @@ MonoBehaviour:
     hdShadowInitParams:
       shadowAtlasResolution: 4096
       maxShadowRequests: 128
-      shadowMapsDepthBits: 24
+      shadowMapsDepthBits: 32
       useDynamicViewportRescale: 1
-      shadowQuality: 2
+      shadowQuality: 1
     decalSettings:
       drawDistance: 1000
       atlasWidth: 4096
@@ -97,7 +93,8 @@ MonoBehaviour:
   enableSRPBatcher: 1
   shaderVariantLogLevel: 0
   diffusionProfileSettings: {fileID: 0}
-  m_Version: 2
+  diffusionProfileSettingsList: []
+  m_Version: 3
   m_ObsoleteFrameSettings:
     overrides: 0
     enableShadow: 0
