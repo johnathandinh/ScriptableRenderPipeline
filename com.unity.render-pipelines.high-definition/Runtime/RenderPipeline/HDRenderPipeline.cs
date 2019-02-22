@@ -212,7 +212,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Material GetBlitMaterial(bool useTexArray) { return useTexArray ? m_BlitTexArray : m_Blit; }
 
         ComputeBuffer m_DepthPyramidMipLevelOffsetsBuffer = null;
-        int m_PrevFrameColorPyramidMips = 0;
 
         ScriptableCullingParameters frozenCullingParams;
         bool frozenCullingParamAvailable = false;
@@ -1829,7 +1828,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #if ENABLE_RAYTRACING
                 m_RaytracingRenderer.Render(hdCamera, cmd, m_CameraColorBuffer, renderContext, cullingResults);
 #endif
-                m_PrevFrameColorPyramidMips = RenderColorPyramid(hdCamera, cmd, false);
+                RenderColorPyramid(hdCamera, cmd, false);
 
                 AccumulateDistortion(cullingResults, hdCamera, renderContext, cmd);
                 RenderDistortion(hdCamera, cmd);
@@ -2933,7 +2932,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._ColorPyramidTexture,  previousColorPyramid);
                     cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._SsrClearCoatMaskTexture, clearCoatMask);
 
-                    cmd.SetComputeIntParam(cs, HDShaderIDs._SsrColorPyramidMaxMip, m_PrevFrameColorPyramidMips - 1);
+                    cmd.SetComputeIntParam(cs, HDShaderIDs._SsrColorPyramidMaxMip, hdCamera.colorPyramidHistoryMipCount - 1);
 
                     cmd.DispatchCompute(cs, kernel, HDUtils.DivRoundUp(w, 8), HDUtils.DivRoundUp(h, 8), XRGraphics.computePassCount);
                 }
@@ -2970,6 +2969,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 m_PyramidSizeV2I.Set(hdCamera.actualWidth, hdCamera.actualHeight);
                 lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid);
+                hdCamera.colorPyramidHistoryMipCount = lodCount;
             }
 
             float scaleX = hdCamera.actualWidth / (float)currentColorPyramid.rt.width;
