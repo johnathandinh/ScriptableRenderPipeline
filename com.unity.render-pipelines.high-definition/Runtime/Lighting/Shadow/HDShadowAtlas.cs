@@ -366,7 +366,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     if (m_CurrentAtlasMomentSurface != finalAtlasTexture[i])
                     {
-                        using (new ProfilingSample(cmd, "Atlas.", CustomSamplerId.RenderShadows.GetSampler()))
+                        using (new ProfilingSample(cmd, "Copy into main atlas.", CustomSamplerId.RenderShadows.GetSampler()))
                         {
                             var shadowRequest = m_ShadowRequests[i];
                             int downsampledWidth = Mathf.CeilToInt(shadowRequest.atlasViewport.width * 0.5f);
