@@ -5,10 +5,11 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 {
     class TerrainLitGUI : LitGUI, ITerrainLayerCustomUI
     {
-        protected override uint defaultExpandedState { get { return 0u; } }
+        protected override uint defaultExpandedState { get { return (uint)(Expandable.Input | Expandable.Other | Expandable.Advance); } }
 
         private class StylesLayer
         {
+            public readonly string terrainText = "Terrain";
             public readonly GUIContent enableHeightBlend = new GUIContent("Enable Height-based Blend", "Blend terrain layers based on height values.");
             public readonly GUIContent heightTransition = new GUIContent("Height Transition", "Size in world units of the smooth transition between layers.");
             public readonly GUIContent enableInstancedPerPixelNormal = new GUIContent("Enable Per-pixel Normal", "Enable per-pixel normal when the terrain uses instanced rendering.");
@@ -41,14 +42,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         {
         }
 
-        MaterialProperty enableHeightBlend;
+        protected MaterialProperty enableHeightBlend;
         const string kEnableHeightBlend = "_EnableHeightBlend";
 
         // Height blend
-        MaterialProperty heightTransition = null;
+        protected MaterialProperty heightTransition = null;
         const string kHeightTransition = "_HeightTransition";
 
-        MaterialProperty enableInstancedPerPixelNormal = null;
+        protected MaterialProperty enableInstancedPerPixelNormal = null;
         const string kEnableInstancedPerPixelNormal = "_EnableInstancedPerPixelNormal";
 
         protected override void FindMaterialProperties(MaterialProperty[] props)
@@ -100,75 +101,43 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             CoreUtils.SetKeyword(material, "_TERRAIN_INSTANCED_PERPIXEL_NORMAL", enableInstancedPerPixelNormal);
         }
 
-        public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
+        protected virtual bool ShouldDoMaterialProperties(Material material) => false;
+        protected virtual void DoMaterialProperties(Material material) { }
+
+        protected override void MaterialPropertiesGUI(Material material)
         {
-            FindBaseMaterialProperties(props);
-            FindMaterialProperties(props);
-
-            m_MaterialEditor = materialEditor;
-
-            // We should always register the key used to keep collapsable state
-            InitExpandableState(materialEditor);
-
-            // We should always do this call at the beginning
-            m_MaterialEditor.serializedObject.Update();
-
-            //Material material = m_MaterialEditor.target as Material;
-            //AssetImporter materialImporter = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(material.GetInstanceID()));
-
-            bool optionsChanged = false;
-            EditorGUI.BeginChangeCheck();
+            bool derivedClassDoMaterialProps = ShouldDoMaterialProperties(material);
+            if (enableHeightBlend != null || derivedClassDoMaterialProps)
             {
-                BaseMaterialPropertiesGUI();
-                if (enableHeightBlend != null)
+                using (var header = new HeaderScope(styles.terrainText, (uint)Expandable.Other, this))
                 {
-                    EditorGUI.indentLevel++;
-                    m_MaterialEditor.ShaderProperty(enableHeightBlend, styles.enableHeightBlend);
-                    if (enableHeightBlend.floatValue > 0)
+                    if (header.expanded)
                     {
-                        EditorGUI.indentLevel++;
-                        m_MaterialEditor.ShaderProperty(heightTransition, styles.heightTransition);
-                        EditorGUI.indentLevel--;
-                    }
-                    EditorGUI.indentLevel--;
-                }
-                EditorGUILayout.Space();
-            }
-            if (EditorGUI.EndChangeCheck())
-            {
-                optionsChanged = true;
-            }
-
-            bool enablePerPixelNormalChanged = false;
-
-
-            using (var header = new HeaderScope(StylesBaseUnlit.advancedText, (uint)Expandable.Advance, this))
-            {
-                if (header.expanded)
-                {
-                    // NB RenderQueue editor is not shown on purpose: we want to override it based on blend mode
-                    m_MaterialEditor.EnableInstancingField();
-                    if (m_MaterialEditor.IsInstancingEnabled())
-                    {
-                        EditorGUI.indentLevel++;
-                        EditorGUI.BeginChangeCheck();
-                        m_MaterialEditor.ShaderProperty(enableInstancedPerPixelNormal, styles.enableInstancedPerPixelNormal);
-                        enablePerPixelNormalChanged = EditorGUI.EndChangeCheck();
-                        EditorGUI.indentLevel--;
+                        if (enableHeightBlend != null)
+                        {
+                            m_MaterialEditor.ShaderProperty(enableHeightBlend, styles.enableHeightBlend);
+                            if (enableHeightBlend.floatValue > 0)
+                            {
+                                EditorGUI.indentLevel++;
+                                m_MaterialEditor.ShaderProperty(heightTransition, styles.heightTransition);
+                                EditorGUI.indentLevel--;
+                            }
+                        }
+                        if (derivedClassDoMaterialProps)
+                            DoMaterialProperties(material);
                     }
                 }
             }
+        }
 
-            if (optionsChanged || enablePerPixelNormalChanged)
+        protected override void MaterialPropertiesAdvanceGUI(Material material)
+        {
+            if (m_MaterialEditor.IsInstancingEnabled())
             {
-                foreach (var obj in m_MaterialEditor.targets)
-                {
-                    SetupMaterialKeywordsAndPassInternal((Material)obj);
-                }
+                EditorGUI.indentLevel++;
+                m_MaterialEditor.ShaderProperty(enableInstancedPerPixelNormal, styles.enableInstancedPerPixelNormal);
+                EditorGUI.indentLevel--;
             }
-
-            // We should always do this call at the end
-            m_MaterialEditor.serializedObject.ApplyModifiedProperties();
         }
 
         private bool m_ShowChannelRemapping = false;
