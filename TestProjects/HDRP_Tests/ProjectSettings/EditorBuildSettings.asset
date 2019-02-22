@@ -323,10 +323,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/GraphicTests/Scenes/9x_Other/9701_AfterPostProcess.unity
     guid: 2bb5d28daf3968e40aad1ae3211c2e9d
-  - enabled: 0
-    path: Assets/GraphicTests/Scenes/2x_Lighting/2308_Shadow_AreaLight_Deferred.unity
+  - enabled: 1
+    path: Assets/GraphicTests/Scenes/2x_Lighting/2308_Shadow_AreaLight.unity
     guid: b03383077f153b7439af7708ebe1155a
-  - enabled: 0
-    path: Assets/GraphicTests/Scenes/2x_Lighting/2309_Shadow_AreaLight_Forward_High.unity
-    guid: cb01cae0313b84c46ae0ac40d5d01822
   m_configObjects: {}
