@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             First,
             UpgradeFrameSettingsToStruct,
             AddAfterPostProcessFrameSetting,
-            AddFrameSettingSpecularLighting
+            AddFrameSettingSpecularLighting = 5
         }
 
         static readonly MigrationDescription<Version, HDRenderPipelineAsset> k_Migration = MigrationDescription.New(
