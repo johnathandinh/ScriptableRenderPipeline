@@ -1,4 +1,4 @@
-﻿#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/Shadow/ShadowMoments.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Builtin/BuiltinData.hlsl"
@@ -87,7 +87,7 @@ void KERNEL_MAIN(uint3 dispatchId : SV_DispatchThreadID, uint3 groupThreadId : S
 #if ALREADY_EVSM
 
                         // Read evsm result
-                        float2 moment = LOAD_TEXTURE2D(_InputTexture, srcIdx + (int2) _SrcOffset - BLUR_BORDER).xy;
+                        float2 moment = LOAD_TEXTURE2D(_InputTexture, srcIdx + (int2) _SrcOffset - BLUR_BORDER.xx).xy;
 
 #else       // ALREADY_EVSM
                         float4 depths;
@@ -149,7 +149,7 @@ void KERNEL_MAIN(uint3 dispatchId : SV_DispatchThreadID, uint3 groupThreadId : S
         }
 
     // write out the result
-    if (all(dispatchId.xy + BLUR_BORDER < _SrcSize))
+    if (all(dispatchId.xy + BLUR_BORDER < uint2(_SrcSize)))
     {
         dispatchId.xy += _DstRect.xy;
         _OutputTexture[dispatchId.xy] = vblurredMoment;
@@ -161,7 +161,7 @@ void KERNEL_MAIN(uint3 dispatchId : SV_DispatchThreadID, uint3 groupThreadId : S
 [numthreads(THREADS, THREADS, 1)]
 void CopyMoments(uint3 dispatchId : SV_DispatchThreadID)
 {
-    _OutputTexture[dispatchId + _SrcOffset] = _InputTexture[dispatchId + _SrcOffset];
+    _OutputTexture[dispatchId.xy + _SrcOffset] = _InputTexture[dispatchId.xy + _SrcOffset].xy;
 }
 
 #endif // def BLUR_SIZE
