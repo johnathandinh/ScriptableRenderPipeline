@@ -89,7 +89,7 @@ float3 EvalShadow_GetTexcoordsAtlas(HDShadowData sd, float2 atlasSizeRcp, float3
     posNDC = (perspProj && posCS.w != 0) ? (posCS.xyz / posCS.w) : posCS.xyz;
 
     // calc TCs
-    float3 posTC = float3(posNDC.xy * 0.5 + 0.5, posNDC.z);
+    float3 posTC = float3(saturate(posNDC.xy * 0.5 + 0.5), posNDC.z);
     posTC.xy = posTC.xy * sd.shadowMapSize.xy * atlasSizeRcp + sd.atlasOffset;
 
     return posTC;
@@ -284,20 +284,30 @@ float EvalShadow_PunctualDepth(HDShadowData sd, Texture2D tex, SamplerComparison
 //
 //  Area light shadows
 //
-float EvalShadow_AreaDepth(HDShadowData sd, Texture2D tex, SamplerComparisonState sampComp, float2 positionSS, float3 positionWS, float3 normalWS, float3 L, float L_dist, bool perspective)
+float EvalShadow_AreaDepth(HDShadowData sd, Texture2D tex, float2 positionSS, float3 positionWS, float3 normalWS, float3 L, float L_dist, bool perspective)
 {
     /* in stereo, translate input position to the same space as shadows for proper sampling and bias */
     positionWS = StereoCameraRelativeEyeToCenter(positionWS);
 
-    /* bias the world position */
-    float recvBiasWeight = EvalShadow_ReceiverBiasWeight(sd, _AreaShadowAtlasSize.zw, sd.atlasOffset, sd.viewBias, sd.edgeTolerance, sd.flags, tex, sampComp, positionWS, normalWS, L, L_dist, perspective);
-    positionWS = EvalShadow_ReceiverBias(sd.viewBias, sd.normalBias, positionWS, normalWS, L, L_dist, recvBiasWeight, perspective);
     /* get shadowmap texcoords */
     float3 posTC = EvalShadow_GetTexcoordsAtlas(sd, _AreaShadowAtlasSize.zw, positionWS, perspective);
-    /* get the per sample bias */
-    float2 sampleBias = EvalShadow_SampleBias_Persp(positionWS, normalWS, posTC);
 
-    return AREA_FILTER_ALGORITHM(sd, positionSS, float3(saturate(posTC.xy), posTC.z), sampleBias, tex, sampComp);
+    int blurPassesScale = (1 + sd.shadowFilterParams0.w);// This is needed as blurring might cause some leaks. 
+    float2 maxCoord = (sd.shadowMapSize.xy - 0.5f * blurPassesScale) * _AreaShadowAtlasSize.zw + sd.atlasOffset;
+    float2 minCoord = sd.atlasOffset + _AreaShadowAtlasSize.zw * blurPassesScale;
+
+    if (any(posTC > maxCoord || posTC < minCoord))
+    {
+        return 1.0f;
+    }
+    else
+    {
+        float2 exponents = sd.shadowFilterParams0.xx;
+        float lightLeakBias = sd.shadowFilterParams0.y; 
+        float varianceBias = sd.shadowFilterParams0.z;
+        return SampleShadow_EVSM_1tap(posTC, lightLeakBias, varianceBias, exponents, false, tex, s_linear_clamp_sampler);
+
+    }
 }
 
 

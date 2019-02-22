@@ -43,6 +43,10 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 #if ENABLE_RAYTRACING
             public SerializedProperty useRayTracedShadows;
 #endif
+            public SerializedProperty evsmExponent;
+            public SerializedProperty evsmLightLeakBias;
+            public SerializedProperty evsmVarianceBias;
+            public SerializedProperty evsmBlurPasses;
 
             // Improved moment shadows data
             public SerializedProperty lightAngle;
@@ -132,6 +136,10 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 #if ENABLE_RAYTRACING
                     useRayTracedShadows = o.Find(x => x.useRayTracedShadows),
 #endif
+                    evsmExponent = o.Find(x => x.evsmExponent),
+                    evsmVarianceBias = o.Find(x => x.evsmVarianceBias),
+                    evsmLightLeakBias = o.Find(x => x.evsmLightLeakBias),
+                    evsmBlurPasses = o.Find(x => x.evsmBlurPasses),
 
                     // Moment light
                     lightAngle = o.Find(x => x.lightAngle),

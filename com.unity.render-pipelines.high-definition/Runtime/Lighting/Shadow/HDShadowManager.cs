@@ -102,6 +102,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public float                kernelSize;
         public float                lightAngle;
         public float                maxDepthBias;
+
+        public Vector4              evsmParams;
     }
 
     public enum HDShadowQuality
@@ -189,7 +191,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool useMomentShadows = GetDirectionaShadowAlgorithm() == DirectionalShadowAlgorithm.IMS;
             m_CascadeAtlas = new HDShadowAtlas(renderPipelineResources, 1, 1, HDShaderIDs._CascadeShadowAtlasSize, clearMaterial, useMomentShadows, depthBufferBits: atlasDepthBits, name: "Cascade Shadow Map Atlas");
 
-            m_AreaLightShadowAtlas = new HDShadowAtlas(renderPipelineResources, width, height, HDShaderIDs._AreaShadowAtlasSize, clearMaterial, false, depthBufferBits: atlasDepthBits, name: "Area Light Shadow Map Atlas");
+            m_AreaLightShadowAtlas = new HDShadowAtlas(renderPipelineResources, width, height, HDShaderIDs._AreaShadowAtlasSize, clearMaterial, false, BlurredEVSM: true, depthBufferBits: atlasDepthBits, name: "Area Light Shadow Map Atlas");
 
             m_ShadowDataBuffer = new ComputeBuffer(maxShadowRequests, System.Runtime.InteropServices.Marshal.SizeOf(typeof(HDShadowData)));
             m_DirectionalShadowDataBuffer = new ComputeBuffer(1, System.Runtime.InteropServices.Marshal.SizeOf(typeof(HDDirectionalShadowData)));
@@ -349,13 +351,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             data.shadowFilterParams0.z = HDShadowUtils.Asfloat(shadowRequest.filterSampleCount);
             data.shadowFilterParams0.w = shadowRequest.minFilterSize;
 
-
             var hdAsset = (GraphicsSettings.renderPipelineAsset as HDRenderPipelineAsset);
             if (hdAsset.currentPlatformRenderPipelineSettings.hdShadowInitParams.shadowQuality == HDShadowQuality.VeryHigh && shadowRequest.lightType == (int)LightType.Directional)
             {
                 data.shadowFilterParams0.x = shadowRequest.kernelSize;
                 data.shadowFilterParams0.y = shadowRequest.lightAngle;
                 data.shadowFilterParams0.z = shadowRequest.maxDepthBias;
+            }
+
+            if (atlas.HasBlurredEVSM())
+            {
+                data.shadowFilterParams0 = shadowRequest.evsmParams;
             }
 
             return data;
@@ -462,6 +468,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             using (new ProfilingSample(cmd, "Area Light Shadows rendering", CustomSamplerId.RenderShadows.GetSampler()))
             {
                 m_AreaLightShadowAtlas.RenderShadows(renderContext, cmd, dss);
+                if (m_AreaLightShadowAtlas.HasBlurredEVSM())
+                {
+                    m_AreaLightShadowAtlas.AreaShadowBlurMoments(cmd, hdCamera);
+                }
             }
 
             // If the shadow algorithm is the improved moment shadow
@@ -491,6 +501,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetGlobalTexture(HDShaderIDs._ShadowmapAtlas, m_Atlas.identifier);
             cmd.SetGlobalTexture(HDShaderIDs._ShadowmapCascadeAtlas, m_CascadeAtlas.identifier);
             cmd.SetGlobalTexture(HDShaderIDs._AreaLightShadowmapAtlas, m_AreaLightShadowAtlas.identifier);
+            if (m_AreaLightShadowAtlas.HasBlurredEVSM())
+            {
+                cmd.SetGlobalTexture(HDShaderIDs._AreaShadowmapMomentAtlas, m_AreaLightShadowAtlas.GetMomentRT());
+            }
 
             cmd.SetGlobalInt(HDShaderIDs._CascadeShadowCount, m_CascadeCount + 1);
         }

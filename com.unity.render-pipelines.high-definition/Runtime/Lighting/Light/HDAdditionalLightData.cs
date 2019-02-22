@@ -181,11 +181,20 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Texture areaLightCookie = null;
 
         [Range(0.0f, 179.0f)]
-        public float areaLightShadowCone = 150.0f;
+        public float areaLightShadowCone = 120.0f;
 
 #if ENABLE_RAYTRACING
         public bool useRayTracedShadows = false;
 #endif
+
+        [Range(0.0f, 42.0f)]
+        public float evsmExponent = 15.0f;
+        [Range(0.0f, 1.0f)]
+        public float evsmLightLeakBias = 0.0f;
+        [Range(0.0f, 0.001f)]
+        public float evsmVarianceBias = 1e-5f;
+        [Range(0, 8)]
+        public int evsmBlurPasses = 0;
 
         // Duplication of HDLightEditor.k_MinAreaWidth, maybe do something about that
         const float k_MinAreaWidth = 0.01f; // Provide a small size of 1cm for line light
@@ -480,6 +489,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             shadowRequest.kernelSize = (uint)kernelSize;
             shadowRequest.lightAngle = (lightAngle * Mathf.PI / 180.0f);
             shadowRequest.maxDepthBias = maxDepthBias;
+            // We transform it to base two for faster computation.
+            // So e^x = 2^y where y = x * log2 (e)
+            const float log2e = 1.44269504089f;
+            shadowRequest.evsmParams.x = evsmExponent * log2e;
+            shadowRequest.evsmParams.y = evsmLightLeakBias;
+            shadowRequest.evsmParams.z = evsmVarianceBias;
+            shadowRequest.evsmParams.w = evsmBlurPasses;
         }
 
 #if UNITY_EDITOR

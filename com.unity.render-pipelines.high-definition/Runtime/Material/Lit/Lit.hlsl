@@ -32,7 +32,7 @@
 // Uncomment this to get speed (to measure), let it comment to get quality
 // #define FORWARD_MATERIAL_READ_FROM_WRITTEN_NORMAL_BUFFER
 
-#define RASTERIZED_AREA_LIGHT_SHADOWS 0
+#define RASTERIZED_AREA_LIGHT_SHADOWS 1
 
 //-----------------------------------------------------------------------------
 // Texture and constant buffer declaration

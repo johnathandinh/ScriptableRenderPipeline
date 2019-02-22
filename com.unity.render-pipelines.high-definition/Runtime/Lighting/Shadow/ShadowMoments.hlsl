@@ -29,6 +29,22 @@ float2 ShadowMoments_WarpDepth( float depth, float2 exponents )
     return float2( pos, neg );
 }
 
+float ShadowMoments_WarpDepth_PosOnly(float depth, float exponent)
+{
+    // Rescale depth into [-1;1]
+    depth = 2.0 * depth - 1.0;
+    float pos = exp(exponent * depth);
+    return pos;
+}
+
+float ShadowMoments_WarpDepth_PosOnlyBaseTwo(float depth, float exponent)
+{
+    // Rescale depth into [-1;1]
+    depth = 2.0 * depth - 1.0;
+    float pos = exp2(exponent * depth);
+    return pos;
+}
+
 // helpers for MSM
 // Prepare the moments so there's little quantization error when storing the moments at float
 // precision. This step becomes unnecessary if the moments are stored in 32bit floats.

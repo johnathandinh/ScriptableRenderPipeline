@@ -68,7 +68,7 @@ float GetPunctualShadowClosestDistance(HDShadowContext shadowContext, SamplerSta
 float GetAreaLightAttenuation(HDShadowContext shadowContext, float2 positionSS, float3 positionWS, float3 normalWS, int shadowDataIndex, float3 L, float L_dist)
 {
     HDShadowData sd = shadowContext.shadowDatas[shadowDataIndex];
-    return EvalShadow_AreaDepth(sd, _AreaShadowmapAtlas, s_linear_clamp_compare_sampler, positionSS, positionWS, normalWS, L, L_dist, true);
+    return EvalShadow_AreaDepth(sd, _AreaShadowmapMomentAtlas, positionSS, positionWS, normalWS, L, L_dist, true);
 }
 
 
