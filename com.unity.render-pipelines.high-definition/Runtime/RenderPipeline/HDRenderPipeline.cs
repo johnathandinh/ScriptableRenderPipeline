@@ -808,7 +808,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 // Off screen rendering is disabled for most of the frame by default.
                 cmd.SetGlobalInt(HDShaderIDs._OffScreenRendering, 0);
-                cmd.SetGlobalInt(HDShaderIDs._EnableReflection, hdCamera.frameSettings.IsEnabled(FrameSettingsField.SpecularLighting) ? 0 : 1);
+                cmd.SetGlobalInt(HDShaderIDs._EnableSpecularLighting, hdCamera.frameSettings.IsEnabled(FrameSettingsField.SpecularLighting) ? 0 : 1);
             }
         }
 
@@ -2103,7 +2103,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // If we don't use environment light (like when rendering reflection probes)
             //   we don't have to cull them.
-            if (hdCamera.frameSettings.useEnvLights)
+            if (hdCamera.frameSettings.IsEnabled(FrameSettingsField.SpecularLighting))
                 cullingParams.cullingOptions |= CullingOptions.NeedsReflectionProbes;
             else
                 cullingParams.cullingOptions &= ~CullingOptions.NeedsReflectionProbes;
@@ -2126,7 +2126,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 #endif
 
-            var includeEnvLights = hdCamera.frameSettings.useEnvLights;
+            var includeEnvLights = hdCamera.frameSettings.IsEnabled(FrameSettingsField.SpecularLighting);
 
             DecalSystem.CullRequest decalCullRequest = null;
             if (hdCamera.frameSettings.IsEnabled(FrameSettingsField.Decals))

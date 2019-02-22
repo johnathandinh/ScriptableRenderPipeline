@@ -467,7 +467,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public static readonly int _EnableLightLayers              = Shader.PropertyToID("_EnableLightLayers"); 
         public static readonly int _OffScreenRendering             = Shader.PropertyToID("_OffScreenRendering");
-        public static readonly int _EnableReflection               = Shader.PropertyToID("_EnableReflection");
+        public static readonly int _EnableSpecularLighting         = Shader.PropertyToID("_EnableSpecularLighting");
 
 #if ENABLE_RAYTRACING
         // Raytracing variables
