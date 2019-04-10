@@ -64,7 +64,7 @@ EnvLightData InitSkyEnvLightData(int envIndex)
     output.influencePositionRWS = float3(0.0, 0.0, 0.0);
 
     output.weight = 1.0;
-    output.multiplier = 1.0;
+    output.multiplier = ReplaceDiffuseForReflectionPass(float3(1.0, 1.0, 1.0)) ? 0.0 : 1.0;
 
     // proxy
     output.proxyForward = float3(0.0, 0.0, 1.0);
@@ -100,7 +100,21 @@ float4 SampleEnv(LightLoopContext lightLoopContext, int index, float3 texCoord, 
             float3 ndc = ComputeNormalizedDeviceCoordinatesWithZ(texCoord, _Env2DCaptureVP[index]);
 
             color.rgb = SAMPLE_TEXTURE2D_ARRAY_LOD(_Env2DTextures, s_trilinear_clamp_sampler, ndc.xy, index, lod).rgb;
-            color.a = any(ndc.xyz < 0) || any(ndc.xyz > 1) ? 0.0 : 1.0;
+#if UNITY_REVERSED_Z
+            // We check that the sample was capture by the probe according to its frustum planes, except the far plane.
+            //   When using oblique projection, the far plane is so distorded that it is not reliable for this check.
+            //   and most of the time, what we want, is the clipping from the oblique near plane.
+            color.a = any(ndc.xy < 0) || any(ndc.xyz > 1) ? 0.0 : 1.0;
+#else
+            color.a = any(ndc.xyz < 0) || any(ndc.xy > 1) ? 0.0 : 1.0;
+#endif
+            float3 capturedForwardWS = float3(
+                _Env2DCaptureForward[index * 3 + 0],
+                _Env2DCaptureForward[index * 3 + 1],
+                _Env2DCaptureForward[index * 3 + 2]
+            );
+            if (dot(capturedForwardWS, texCoord) < 0.0)
+                color.a = 0.0;
         }
         else if (cacheType == ENVCACHETYPE_CUBEMAP)
         {
@@ -130,7 +144,12 @@ int GetTileOffset(PositionInputs posInput, uint lightCategory)
 
 void GetCountAndStartTile(PositionInputs posInput, uint lightCategory, out uint start, out uint lightCount)
 {
-    const int tileOffset = GetTileOffset(posInput, lightCategory);
+    int tileOffset = GetTileOffset(posInput, lightCategory);
+
+#if defined(UNITY_STEREO_INSTANCING_ENABLED)
+    // Eye base offset must match code in lightlistbuild.compute
+    tileOffset += unity_StereoEyeIndex * _NumTileFtplX * _NumTileFtplY * LIGHTCATEGORY_COUNT;
+#endif
 
     // The first entry inside a tile is the number of light for lightCategory (thus the +0)
     lightCount = g_vLightListGlobal[DWORD_PER_TILE * tileOffset + 0] & 0xffff;
@@ -163,18 +182,6 @@ uint FetchIndex(uint tileOffset, uint lightOffset)
 uint GetTileSize()
 {
     return TILE_SIZE_CLUSTERED;
-}
-
-float GetLightClusterMinLinearDepth(uint2 tileIndex, uint clusterIndex)
-{
-    float logBase = g_fClustBase;
-    if (g_isLogBaseBufferEnabled)
-    {
-        // XRTODO: Stereo-ize access to g_logBaseBuffer
-        logBase = g_logBaseBuffer[tileIndex.y * _NumTileClusteredX + tileIndex.x];
-    }
-
-    return ClusterIdxToZFlex(clusterIndex, logBase, g_isLogBaseBufferEnabled != 0);
 }
 
 uint GetLightClusterIndex(uint2 tileIndex, float linearDepth)
